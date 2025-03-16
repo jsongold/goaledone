@@ -33,7 +33,7 @@ export const useActivityStore = create<ActivityState>((set) => ({
     const activity: Activity = {
       id: crypto.randomUUID(),
       description: String(activityData.description || ''),
-      duration: Number(activityData.duration || 30),
+      duration: Number(activityData.duration || 0),
       category: String(activityData.category || 'Other'),
       notes: activityData.notes ? String(activityData.notes) : undefined,
       timestamp: new Date(activityData.timestamp),

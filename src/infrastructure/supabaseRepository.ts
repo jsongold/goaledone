@@ -232,7 +232,7 @@ export class SupabaseActivityRepository implements ActivityRepository {
       id: activity.id,
       timestamp: new Date(activity.timestamp),
       description: String(activity.description || ''),
-      duration: Number(activity.duration || 30),
+      duration: Number(activity.duration || 0),
       category: String(activity.category || 'Other'),
       notes: activity.notes ? String(activity.notes) : undefined,
       userId: activity.user_id,
