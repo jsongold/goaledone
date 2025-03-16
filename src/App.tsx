@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format, addDays, startOfHour, addMinutes } from 'date-fns';
-import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X } from 'lucide-react';
+import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useActivityStore } from './store/activityStore';
 import { useGoalStore } from './store/goalStore';
 import { useAuth } from './auth/AuthProvider';
@@ -32,7 +32,7 @@ function roundToNearestTenMinutes(date: Date): Date {
 
 function App() {
   const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('30');
+  const [duration, setDuration] = useState('10');
   const [category, setCategory] = useState('Other');
   const [notes, setNotes] = useState('');
   const [activityTime, setActivityTime] = useState(roundToNearestTenMinutes(new Date()));
@@ -73,7 +73,7 @@ function App() {
 
   const resetForm = () => {
     setDescription('');
-    setDuration('30');
+    setDuration('10');
     setCategory('Other');
     setNotes('');
     setActivityTime(roundToNearestTenMinutes(new Date()));
@@ -119,8 +119,8 @@ function App() {
     
     try {
       const durationInMinutes = parseInt(duration);
-      if (isNaN(durationInMinutes) || durationInMinutes < 10) {
-        throw new Error('Duration must be at least 10 minutes');
+      if (isNaN(durationInMinutes)) {
+        throw new Error('Duration must be a valid number');
       }
 
       if (editingActivity) {
@@ -152,7 +152,7 @@ function App() {
   const handleActivityClick = (activity: Activity) => {
     setEditingActivity(activity);
     setDescription(activity.description || '');
-    setDuration(String(activity.duration || '30'));
+    setDuration(String(activity.duration || '0'));
     setCategory(activity.category || 'Other');
     setNotes(activity.notes || '');
     setActivityTime(new Date(activity.timestamp));
@@ -257,7 +257,7 @@ function App() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <p className="text-gray-800">{String(activity.description || '')}</p>
-                              <span className="text-sm text-gray-500">({String(activity.duration || 30)} min)</span>
+                              <span className="text-sm text-gray-500">({String(activity.duration || 0)} min)</span>
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
@@ -310,31 +310,86 @@ function App() {
               autoFocus
             />
             <div className="flex gap-2">
+              <div className="w-1/2">
+                <label className="block text-sm text-gray-500 mb-1">Time</label>
+                <div className="p-3 border border-gray-200 rounded-lg flex items-center gap-3 h-[46px]">
+                  <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex-1 text-center font-medium">
+                      {format(activityTime, 'HH:mm')}
+                    </div>
+                    <div className="flex flex-col h-full -my-0.5">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newTime = new Date(activityTime);
+                          newTime.setMinutes(newTime.getMinutes() + 10);
+                          setActivityTime(newTime);
+                        }}
+                        className="p-0.5 hover:bg-gray-100 rounded flex items-center justify-center"
+                      >
+                        <ChevronUp className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newTime = new Date(activityTime);
+                          newTime.setMinutes(newTime.getMinutes() - 10);
+                          setActivityTime(newTime);
+                        }}
+                        className="p-0.5 hover:bg-gray-100 rounded flex items-center justify-center"
+                      >
+                        <ChevronDown className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="w-1/2">
+                <label className="block text-sm text-gray-500 mb-1">Duration</label>
+                <div className="p-3 border border-gray-200 rounded-lg flex items-center gap-3 h-[46px]">
+                  <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex-1 text-center font-medium">
+                      {duration} <span className="text-gray-500 text-sm">min</span>
+                    </div>
+                    <div className="flex flex-col h-full -my-0.5">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newDuration = parseInt(duration) + 10;
+                          setDuration(newDuration.toString());
+                        }}
+                        className="p-0.5 hover:bg-gray-100 rounded flex items-center justify-center"
+                      >
+                        <ChevronUp className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newDuration = Math.max(0, parseInt(duration) - 10);
+                          setDuration(newDuration.toString());
+                        }}
+                        className="p-0.5 hover:bg-gray-100 rounded flex items-center justify-center"
+                      >
+                        <ChevronDown className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">Date</label>
               <input
-                type="number"
-                value={duration}
+                type="date"
+                value={format(activityTime, 'yyyy-MM-dd')}
                 onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (!isNaN(value) && value >= 10) {
-                    setDuration(value.toString());
-                  }
+                  const currentTime = format(activityTime, 'HH:mm');
+                  const newDateTime = new Date(`${e.target.value}T${currentTime}`);
+                  setActivityTime(newDateTime);
                 }}
-                className="w-1/2 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Duration (min)"
-                min="10"
-                step="10"
-              />
-              <input
-                type="time"
-                value={format(activityTime, 'HH:mm')}
-                onChange={(e) => {
-                  const [hours, minutes] = e.target.value.split(':');
-                  const newTime = new Date(activityTime);
-                  newTime.setHours(parseInt(hours));
-                  newTime.setMinutes(parseInt(minutes));
-                  setActivityTime(newTime);
-                }}
-                className="w-1/2 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
             <select
@@ -400,7 +455,7 @@ function App() {
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
         <button
-          onClick={() => setShowOCR(true)}
+          onClick={() => {}}
           className="bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-colors transform hover:scale-105"
         >
           <CameraCapture className="w-6 h-6" />
