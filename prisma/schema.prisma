@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Goal {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime @map("start_date")
+  endDate     DateTime? @map("end_date")
+  rrule       String?
+  userId      String   @map("user_id")
+  
+  occurrences GoalOccurrence[]
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("goals")
+}
+
+model GoalOccurrence {
+  id          String   @id @default(uuid())
+  goalId      String   @map("goal_id")
+  date        DateTime
+  completed   Boolean  @default(false)
+  notes       String?
+  
+  goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("goal_occurrences")
+}
+
+model RRuleSetting {
+  id          String   @id @default(uuid())
+  frequency   String
+  interval    Int      @default(1)
+  weekdays    String[]
+  until       DateTime?
+  count       Int?
+  bymonthday  Int[]
+  bymonth     Int[]
+  byyearday   Int[]
+  byweekno    Int[]
+  bysetpos    Int[]
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("rrule_settings")
+}
+
+model Label {
+  id          String   @id @default(uuid())
+  name        String
+  color       String
+  userId      String   @map("user_id")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("labels")
+}

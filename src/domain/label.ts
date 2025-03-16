@@ -1,9 +1,8 @@
 export interface Label {
-  id: string;
+  id?: string;
   name: string;
   color: string;
-  userId?: string;
-  createdAt: Date;
+  userId: string;
 }
 
 export interface LabelRepository {
