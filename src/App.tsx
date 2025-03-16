@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format, addDays, startOfHour, addMinutes } from 'date-fns';
-import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X, Circle, CheckCircle, Camera } from 'lucide-react';
+import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X } from 'lucide-react';
 import { useActivityStore } from './store/activityStore';
 import { useGoalStore } from './store/goalStore';
 import { useAuth } from './auth/AuthProvider';
@@ -9,10 +9,9 @@ import { CalendarModal } from './components/Calendar';
 import { GoalPage } from './components/GoalPage';
 import { LabelPicker } from './components/LabelPicker';
 import { ActivityLabels } from './components/ActivityLabels';
-import { OCRCapture } from './components/OCRCapture';
 import { useLabelStore } from './store/labelStore';
 import { Activity } from './domain/activity';
-import { Goal } from './domain/goal';
+import { CameraCapture } from './components/CameraCapture';
 
 const CATEGORIES = [
   'Exercise',
@@ -41,13 +40,12 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showGoalPage, setShowGoalPage] = useState(false);
-  const [showOCR, setShowOCR] = useState(false);
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const { user, signOut, loading: authLoading } = useAuth();
 
   const { activities, loading, error, addActivity, deleteActivity, updateActivity, loadActivities, selectedDate, setSelectedDate } = useActivityStore();
-  const { goals, loadGoals, updateGoal } = useGoalStore();
+  const { goals, loadGoals } = useGoalStore();
   const { loadLabels } = useLabelStore();
 
   useEffect(() => {
@@ -56,7 +54,7 @@ function App() {
       loadGoals(selectedDate);
       loadLabels();
     }
-  }, [selectedDate, user]);
+  }, [selectedDate, user, loadActivities, loadGoals, loadLabels]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -99,17 +97,6 @@ function App() {
     }
   };
 
-  const handleGoalToggle = async (goal: Goal) => {
-    try {
-      await updateGoal(goal.id, {
-        ...goal,
-        completed: !goal.completed
-      });
-    } catch (error) {
-      console.error('Failed to update goal:', error);
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
@@ -126,38 +113,15 @@ function App() {
     return <GoalPage onBack={() => setShowGoalPage(false)} />;
   }
 
-  if (showOCR) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-        <div className="fixed top-0 left-0 right-0 bg-gradient-to-br from-purple-100 to-blue-100 z-10 pb-4">
-          <div className="max-w-md mx-auto p-4">
-            <div className="flex items-center mb-6">
-              <button
-                onClick={() => setShowOCR(false)}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <h1 className="text-xl font-semibold text-gray-800 flex-1 text-center">
-                OCR Capture
-              </h1>
-            </div>
-          </div>
-        </div>
-        <div className="pt-24">
-          <OCRCapture />
-        </div>
-      </div>
-    );
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim()) return;
     
     try {
       const durationInMinutes = parseInt(duration);
-      if (isNaN(durationInMinutes)) return;
+      if (isNaN(durationInMinutes) || durationInMinutes < 10) {
+        throw new Error('Duration must be at least 10 minutes');
+      }
 
       if (editingActivity) {
         await updateActivity(editingActivity.id, {
@@ -259,27 +223,15 @@ function App() {
         <div className="max-w-md mx-auto px-4 pt-48 pb-24">
           {/* Goals Section */}
           {goals.length > 0 && (
-            <div className="bg-white rounded-xl p-4 shadow-md mb-4">
-              <h2 className="text-lg font-semibold mb-3">Today's Goals</h2>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-3 text-gray-800">Goals for Today</h2>
               <div className="space-y-2">
-                {goals.map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="flex items-center gap-3 group cursor-pointer hover:bg-gray-50 rounded-lg p-2 -mx-2"
-                  >
-                    <button
-                      onClick={() => handleGoalToggle(goal)}
-                      className="text-gray-400 hover:text-purple-600 transition-colors"
-                    >
-                      {goal.completed ? (
-                        <CheckCircle className="w-5 h-5 text-purple-600" />
-                      ) : (
-                        <Circle className="w-5 h-5" />
-                      )}
-                    </button>
-                    <span className={goal.completed ? 'line-through text-gray-500' : 'text-gray-800'}>
-                      {goal.title || goal.description}
-                    </span>
+                {goals.map(goal => (
+                  <div key={goal.id} className="bg-white rounded-xl p-4 shadow-md">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${goal.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <span className="text-gray-800">{goal.title || goal.description}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -361,10 +313,15 @@ function App() {
               <input
                 type="number"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (!isNaN(value) && value >= 10) {
+                    setDuration(value.toString());
+                  }
+                }}
                 className="w-1/2 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Duration (min)"
-                min="1"
+                min="10"
                 step="10"
               />
               <input
@@ -374,11 +331,10 @@ function App() {
                   const [hours, minutes] = e.target.value.split(':');
                   const newTime = new Date(activityTime);
                   newTime.setHours(parseInt(hours));
-                  newTime.setMinutes(Math.round(parseInt(minutes) / 10) * 10);
+                  newTime.setMinutes(parseInt(minutes));
                   setActivityTime(newTime);
                 }}
                 className="w-1/2 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                step="600"
               />
             </div>
             <select
@@ -447,7 +403,7 @@ function App() {
           onClick={() => setShowOCR(true)}
           className="bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-colors transform hover:scale-105"
         >
-          <Camera className="w-6 h-6" />
+          <CameraCapture className="w-6 h-6" />
         </button>
         <button
           onClick={() => setShowGoalPage(true)}
