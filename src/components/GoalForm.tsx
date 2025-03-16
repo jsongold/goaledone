@@ -4,6 +4,8 @@ import { Goal } from '../domain/goal';
 import { RRuleConfig } from './RRuleConfig';
 import { RRuleSetting } from '../domain/rrule';
 import { useRRuleStore } from '../store/rruleStore';
+import { RecurrenceForm } from './RecurrenceForm';
+import { RecurrenceRule } from '../domain/recurrence';
 
 interface GoalFormProps {
   goal?: Goal;
@@ -16,6 +18,10 @@ export function GoalForm({ goal, onSubmit, onClose }: GoalFormProps) {
   const [titleError, setTitleError] = useState('');
   const [showRRuleConfig, setShowRRuleConfig] = useState(false);
   const [rruleSetting, setRRuleSetting] = useState<RRuleSetting>();
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [showRecurrenceForm, setShowRecurrenceForm] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
+  const [rruleString, setRruleString] = useState<string | undefined>();
   
   const { getRRule, saveRRule, deleteRRule } = useRRuleStore();
 
@@ -98,16 +104,45 @@ export function GoalForm({ goal, onSubmit, onClose }: GoalFormProps) {
             )}
           </div>
 
-          <div>
+          <div className="flex items-center gap-2 mb-4">
+            <input
+              type="checkbox"
+              id="isRecurring"
+              checked={isRecurring}
+              onChange={(e) => setIsRecurring(e.target.checked)}
+              className="w-4 h-4 text-purple-600"
+            />
+            <label htmlFor="isRecurring">Repeat this goal</label>
+          </div>
+
+          {isRecurring && !showRecurrenceForm && (
             <button
               type="button"
-              onClick={() => setShowRRuleConfig(true)}
-              className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
+              onClick={() => setShowRecurrenceForm(true)}
+              className="w-full p-3 border border-gray-200 rounded-lg text-left"
             >
-              <Repeat className="w-5 h-5" />
-              <span>{rruleSetting ? 'Edit repeat settings' : 'Add repeat settings'}</span>
+              {recurrenceRule ? (
+                <span>
+                  {recurrenceRule.frequency} • Every {recurrenceRule.interval || 1} {recurrenceRule.interval === 1 ? recurrenceRule.frequency.slice(0, -2) : recurrenceRule.frequency}
+                </span>
+              ) : (
+                <span>Set recurrence pattern</span>
+              )}
             </button>
-          </div>
+          )}
+
+          {showRecurrenceForm && (
+            <RecurrenceForm
+              initialRule={recurrenceRule}
+              startDate={goal?.targetDate || new Date()}
+              onSave={(rrule, rule) => {
+                setRruleString(rrule);
+                setRecurrenceRule(rule);
+                setShowRecurrenceForm(false);
+              }}
+              onCancel={() => setShowRecurrenceForm(false)}
+            />
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <button

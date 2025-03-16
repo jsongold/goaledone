@@ -1,3 +1,5 @@
+import { RecurrenceRule } from './recurrence';
+
 export type GoalStatus = 'Not Started' | 'In Progress' | 'Completed' | 'On Hold' | 'Cancelled';
 
 export interface Milestone {
@@ -31,6 +33,11 @@ export interface Goal {
   milestones: Milestone[];
   last_updated: Date;
   rrule_setting_id?: string;
+  isRecurring?: boolean;
+  rrule?: string;
+  recurrenceRule?: RecurrenceRule;
+  recurrenceId?: string;
+  isException?: boolean;
 }
 
 export interface GoalRepository {

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Goal, GoalRepository } from '../domain/goal';
 import { startOfDay, endOfDay } from 'date-fns';
+import { getOccurrences } from '../domain/recurrence';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || '',
@@ -158,5 +159,81 @@ export class SupabaseGoalRepository implements GoalRepository {
 
   async generateRepeatingGoals(goal: Goal): Promise<void> {
     // Implementation for repeating goals
+  }
+
+  async getGoalsForDateRange(startDate: Date, endDate: Date): Promise<Goal[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('No authenticated user found');
+      return [];
+    }
+
+    // 1. Get all one-time goals that fall in the range
+    const { data: oneTimeGoals, error: oneTimeError } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('userId', user.id)
+      .is('isRecurring', false)
+      .gte('targetDate', startDate.toISOString())
+      .lte('targetDate', endDate.toISOString());
+    
+    if (oneTimeError) throw oneTimeError;
+    
+    // 2. Get all recurring goals
+    const { data: recurringGoals, error: recurringError } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('userId', user.id)
+      .eq('isRecurring', true)
+      .is('recurrenceId', null); // Get parent definitions only
+    
+    if (recurringError) throw recurringError;
+    
+    // 3. Get exceptions (modified instances)
+    const { data: exceptions, error: exceptionsError } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('userId', user.id)
+      .eq('isException', true)
+      .gte('targetDate', startDate.toISOString())
+      .lte('targetDate', endDate.toISOString());
+    
+    if (exceptionsError) throw exceptionsError;
+    
+    // 4. Generate occurrences for recurring goals
+    const generatedOccurrences: Goal[] = [];
+    
+    for (const recurringGoal of recurringGoals) {
+      if (!recurringGoal.rrule) continue;
+      
+      // Get dates in the range that match the rule
+      const occurrenceDates = getOccurrences(recurringGoal.rrule, startDate, endDate);
+      
+      // Create virtual instances for each date
+      for (const date of occurrenceDates) {
+        // Check if we have an exception for this date
+        const exceptionForDate = exceptions.find(e => 
+          e.recurrenceId === recurringGoal.id && 
+          new Date(e.targetDate).toDateString() === date.toDateString()
+        );
+        
+        // If we have an exception, use that instead
+        if (exceptionForDate) {
+          generatedOccurrences.push(exceptionForDate);
+        } else {
+          // Create a virtual instance
+          generatedOccurrences.push({
+            ...recurringGoal,
+            id: `${recurringGoal.id}_${date.toISOString()}`, // Virtual ID
+            targetDate: date,
+            // Keep parent's isRecurring true but mark as a generated instance
+            recurrenceId: recurringGoal.id
+          });
+        }
+      }
+    }
+    
+    // Combine one-time goals with generated occurrences
+    return [...oneTimeGoals, ...generatedOccurrences];
   }
 }

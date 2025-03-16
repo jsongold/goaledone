@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { Check, X } from 'lucide-react';
-import { RepeatConfig } from '../domain/goal';
+
+// Define the RepeatConfig interface based on usage in the component
+interface RepeatConfig {
+  enabled: boolean;
+  weekdays?: string[];
+  relativeDay?: {
+    days: number;
+    type: 'before_end' | 'after_beginning';
+  };
+}
 
 interface RepeatConfigInputProps {
   value: RepeatConfig | undefined;
@@ -69,7 +78,7 @@ export function RepeatConfigInput({ value, onChange }: RepeatConfigInputProps) {
   const handleWeekdayToggle = (day: string) => {
     const currentWeekdays = tempConfig.weekdays || [];
     const newWeekdays = currentWeekdays.includes(day)
-      ? currentWeekdays.filter(d => d !== day)
+      ? currentWeekdays.filter((d: string) => d !== day)
       : [...currentWeekdays, day];
 
     setTempConfig({
@@ -88,7 +97,7 @@ export function RepeatConfigInput({ value, onChange }: RepeatConfigInputProps) {
     );
 
     const newWeekdays = allPresetDaysSelected
-      ? currentWeekdays.filter(day => !presetDays.includes(day))
+      ? currentWeekdays.filter((day: string) => !presetDays.includes(day))
       : [...new Set([...currentWeekdays, ...presetDays])];
 
     setTempConfig({

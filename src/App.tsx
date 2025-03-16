@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format, addDays, startOfHour, addMinutes } from 'date-fns';
-import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X, ChevronUp, ChevronDown, Circle, CheckCircle } from 'lucide-react';
 import { useActivityStore } from './store/activityStore';
 import { useGoalStore } from './store/goalStore';
 import { useAuth } from './auth/AuthProvider';
@@ -51,7 +51,7 @@ function App() {
   const { user, signOut, loading: authLoading } = useAuth();
 
   const { activities, loading, error, addActivity, deleteActivity, updateActivity, loadActivities, selectedDate, setSelectedDate } = useActivityStore();
-  const { goals, loadGoals } = useGoalStore();
+  const { goals, loadGoals, updateGoal } = useGoalStore();
   const { loadLabels } = useLabelStore();
 
   useEffect(() => {
@@ -138,6 +138,13 @@ function App() {
           timestamp: activityTime,
           labels: selectedLabels
         });
+        
+        // If the activity date was updated to a different day, load activities for the current view
+        const activityDate = new Date(activityTime);
+        const currentDate = new Date(selectedDate);
+        if (activityDate.toDateString() !== currentDate.toDateString()) {
+          await loadActivities(selectedDate);
+        }
       } else {
         await addActivity({
           description,
@@ -233,10 +240,40 @@ function App() {
               <h2 className="text-lg font-semibold mb-3 text-gray-800">Goals for Today</h2>
               <div className="space-y-2">
                 {goals.map(goal => (
-                  <div key={goal.id} className="bg-white rounded-xl p-4 shadow-md">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${goal.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
-                      <span className="text-gray-800">{goal.title || goal.description}</span>
+                  <div 
+                    key={goal.id} 
+                    className={`bg-white rounded-xl p-4 shadow-md ${
+                      goal.completed ? 'bg-opacity-70' : ''
+                    }`}
+                  >
+                    <div className={`flex items-center gap-2 ${
+                      goal.completed ? 'text-gray-500' : ''
+                    }`}>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await updateGoal(goal.id, { 
+                              ...goal, 
+                              completed: !goal.completed 
+                            });
+                            // Reload goals to get updated data
+                            await loadGoals(selectedDate);
+                          } catch (error) {
+                            console.error('Failed to update goal:', error);
+                          }
+                        }}
+                        className="focus:outline-none"
+                      >
+                        {goal.completed ? (
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-300 flex-shrink-0 hover:text-gray-400" />
+                        )}
+                      </button>
+                      <span className={`${goal.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                        {goal.title || goal.description}
+                      </span>
                     </div>
                   </div>
                 ))}
