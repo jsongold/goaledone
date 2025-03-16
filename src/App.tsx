@@ -24,6 +24,12 @@ const CATEGORIES = [
   'Other'
 ];
 
+const DEFAULT_DURATION = '10';
+const DEFAULT_CATEGORY = 'Other';
+const DEFAULT_DESCRIPTION = '';
+const DEFAULT_NOTES = '';
+const DEFAULT_LABELS: string[] = [];
+
 function roundToNearestTenMinutes(date: Date): Date {
   const minutes = date.getMinutes();
   const roundedMinutes = Math.round(minutes / 10) * 10;
@@ -31,16 +37,16 @@ function roundToNearestTenMinutes(date: Date): Date {
 }
 
 function App() {
-  const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('10');
-  const [category, setCategory] = useState('Other');
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
+  const [duration, setDuration] = useState(DEFAULT_DURATION);
+  const [category, setCategory] = useState(DEFAULT_CATEGORY);
+  const [notes, setNotes] = useState(DEFAULT_NOTES);
   const [activityTime, setActivityTime] = useState(roundToNearestTenMinutes(new Date()));
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showGoalPage, setShowGoalPage] = useState(false);
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<string[]>(DEFAULT_LABELS);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const { user, signOut, loading: authLoading } = useAuth();
 
@@ -72,12 +78,12 @@ function App() {
   }, [handleClickOutside]);
 
   const resetForm = () => {
-    setDescription('');
-    setDuration('10');
-    setCategory('Other');
-    setNotes('');
+    setDescription(DEFAULT_DESCRIPTION);
+    setDuration(DEFAULT_DURATION);
+    setCategory(DEFAULT_CATEGORY);
+    setNotes(DEFAULT_NOTES);
     setActivityTime(roundToNearestTenMinutes(new Date()));
-    setSelectedLabels([]);
+    setSelectedLabels(DEFAULT_LABELS);
     setEditingActivity(null);
   };
 
