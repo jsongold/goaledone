@@ -1,0 +1,90 @@
+:root {
+  --action-button-bottom: 1.5rem;
+  --action-button-size: 3.5rem;
+  --action-button-padding: 0.5rem;
+  --action-button-gap: 2rem;
+  --primary-color: rgb(79, 70, 229); /* purple-600 */
+  --primary-color-hover: rgb(79, 70, 229); /* purple-700 */
+  --green-color: rgb(22, 163, 74); /* green-600 */
+  --green-color-hover: rgb(21, 128, 61); /* green-700 */
+  --indigo-color: rgb(79, 70, 229); /* indigo-600 */
+  --indigo-color-hover: rgb(67, 56, 202); /* indigo-700 */
+  --z-index-buttons: 10000;
+}
+
+/* Container styles */
+.action-buttons-container {
+  position: fixed;
+  bottom: var(--action-button-bottom);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--action-button-gap);
+  z-index: var(--z-index-buttons);
+  pointer-events: auto !important;
+}
+
+.action-buttons-wrapper {
+  position: fixed;
+  bottom: var(--action-button-bottom);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-index-buttons);
+  gap: var(--action-button-gap);
+  opacity: 0 !important;
+}
+
+.action-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--action-button-padding);
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  opacity: 1 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: var(--action-button-size);
+  height: var(--action-button-size);
+}
+
+/* Make sure buttons are not hidden by other elements */
+body .action-buttons-container,
+body .action-buttons-wrapper,
+body .action-button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.action-button:hover {
+  background-color: var(--primary-color-hover);
+  transform: scale(1.05);
+}
+
+.action-button.goal-button {
+  background-color: var(--primary-color);
+}
+
+.action-button.goal-button:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.action-button.add-button {
+  background-color: var(--indigo-color);
+}
+
+.action-button.add-button:hover {
+  background-color: var(--indigo-color-hover);
+}
+
+/* Icon styles */
+.action-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  visibility: visible !important;
+  display: block !important;
+} 

@@ -7,7 +7,7 @@ interface CameraCaptureProps {
   className?: string;
 }
 
-export function CameraCapture({ className }: CameraCaptureProps): JSX.Element {
+export const CameraCapture: React.FC<CameraCaptureProps> = ({ className }) => {
   const [showCamera, setShowCamera] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const { isStreaming, error, startCamera, stopCamera, captureImage } = useCameraStore();
@@ -97,4 +97,4 @@ export function CameraCapture({ className }: CameraCaptureProps): JSX.Element {
       )}
     </div>
   );
-}
+};

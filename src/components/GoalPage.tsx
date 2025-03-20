@@ -7,6 +7,8 @@ import { CalendarModal } from './Calendar';
 import { GoalTable } from './GoalTable';
 import { GoalForm } from './GoalForm';
 import { Goal } from '../domain/goal';
+import { ActionButtons } from './ActionButtons';
+import { GoalPageActionButtons } from './GoalPageActionButtons';
 
 interface GoalPageProps {
   onBack: () => void;
@@ -221,24 +223,13 @@ export function GoalPage({ onBack }: GoalPageProps) {
         </div>
       )}
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
-        <button
-          onClick={onBack}
-          className="bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-colors transform hover:scale-105"
-          title="Go to Home"
-        >
-          <Home className="w-6 h-6" />
-        </button>
-        <button
-          onClick={() => {
-            setIsFormOpen(true);
-            setEditingGoal(null);
-          }}
-          className="bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-colors transform hover:scale-105"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-      </div>
+      <GoalPageActionButtons
+        onBackClick={onBack}
+        onAddClick={() => {
+          setIsFormOpen(true);
+          setEditingGoal(null);
+        }}
+      />
     </div>
   );
 }
