@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format, addDays, startOfHour, addMinutes } from 'date-fns';
-import { Plus, Clock, Menu, LogOut, Calendar as CalendarIcon, Trash2, ChevronLeft, ChevronRight, Target, Tag, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Clock, Menu, LogOut, Trash2, ChevronLeft, ChevronRight, Target, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useActivityStore } from './store/activityStore';
 import { useGoalStore } from './store/goalStore';
 import { useAuth } from './auth/AuthProvider';
 import { AuthForm } from './components/AuthForm';
 import { CalendarModal } from './components/Calendar';
 import { GoalPage } from './components/GoalPage';
-import { LabelPicker } from './components/LabelPicker';
+
 import { ActivityLabels } from './components/ActivityLabels';
 import { useLabelStore } from './store/labelStore';
 import { Activity } from './domain/activity';

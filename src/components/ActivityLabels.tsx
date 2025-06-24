@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLabelStore } from '../store/labelStore';
 
 interface ActivityLabelsProps {
   labelIds: string[];
 }
 
-export function ActivityLabels({ labelIds }: ActivityLabelsProps) {
+export const ActivityLabels = React.memo(function ActivityLabels({ labelIds }: ActivityLabelsProps) {
   const { labels } = useLabelStore();
-  const activityLabels = labels.filter(label => labelIds.includes(label.id));
+  
+  const activityLabels = useMemo(() => 
+    labels.filter(label => labelIds.includes(label.id)),
+    [labels, labelIds]
+  );
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -25,7 +29,7 @@ export function ActivityLabels({ labelIds }: ActivityLabelsProps) {
       ))}
     </div>
   );
-}
+});
 
 // Helper function to determine if a color is light
 function isLightColor(color: string): boolean {
